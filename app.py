@@ -91,7 +91,7 @@ def parse_session(path, page=0):
         for line in f:
             try:
                 obj = json.loads(line.strip())
-            except Exception:
+            except (json.JSONDecodeError, ValueError):
                 continue
             msg = obj.get("message") if isinstance(obj.get("message"), dict) else {}
             if msg.get("model"): model = msg["model"]
@@ -308,7 +308,7 @@ def api_agents():
                     a["total_lines"] += 1
                     try:
                         obj = json.loads(line.strip())
-                    except:
+                    except (json.JSONDecodeError, ValueError):
                         continue
                     msg = obj.get("message") if isinstance(obj.get("message"), dict) else {}
                     if msg.get("role") == "user":
@@ -316,7 +316,7 @@ def api_agents():
                     elif msg.get("role") == "assistant" and msg.get("tool_calls"):
                         a["total_tool_calls"] += len(msg["tool_calls"])
                         a["total_messages"] += 1
-        except:
+        except (IOError, OSError):
             pass
         if s["mtime"] > a["latest_mtime"]:
             a["latest_mtime"] = s["mtime"]
@@ -340,8 +340,16 @@ def api_agents():
 
 @app.route("/metrics")
 def metrics_endpoint():
-    """Prometheus-compatible metrics endpoint."""
+    """Prometheus-compatible metrics endpoint.
+
+    Caches output keyed on the newest session file mtime, so repeated
+    scrapes within the same scrape interval return instantly without
+    re-reading all JSONL files.
+    """
     sessions = find_sessions()
+    newest_mtime = max((s["mtime"] for s in sessions), default=0)
+    if hasattr(metrics_endpoint, "_cache") and metrics_endpoint._cache["mtime"] == newest_mtime:
+        return metrics_endpoint._cache["data"], 200, {"Content-Type": "text/plain; version=0.0.4"}
     lines = []
     # oc_sessions_total — total session count per agent
     lines.append("# HELP oc_sessions_total Total number of sessions per agent")
@@ -358,6 +366,11 @@ def metrics_endpoint():
     # oc_session_lines_total — total JSONL lines per agent
     lines.append("# HELP oc_session_lines_total Total JSONL lines across all sessions per agent")
     lines.append("# TYPE oc_session_lines_total gauge")
+
+    # Cache key: mtime of newest session file
+    newest_mtime = max((s["mtime"] for s in sessions), default=0)
+    if hasattr(metrics_endpoint, "_cache") and metrics_endpoint._cache["mtime"] == newest_mtime:
+        return metrics_endpoint._cache["data"], 200, {"Content-Type": "text/plain; version=0.0.4"}
 
     # Aggregate per agent
     agents = {}
@@ -376,7 +389,7 @@ def metrics_endpoint():
                     a["lines"] += 1
                     try:
                         obj = json.loads(line.strip())
-                    except:
+                    except (json.JSONDecodeError, ValueError):
                         continue
                     msg = obj.get("message") if isinstance(obj.get("message"), dict) else {}
                     if msg.get("role") == "user":
@@ -384,7 +397,7 @@ def metrics_endpoint():
                     elif msg.get("role") == "assistant" and msg.get("tool_calls"):
                         a["tool_calls"] += len(msg["tool_calls"])
                         a["messages"] += 1
-        except:
+        except (IOError, OSError):
             pass
 
     for aid, data in sorted(agents.items()):
@@ -396,7 +409,9 @@ def metrics_endpoint():
         lines.append(f'oc_session_tool_calls_total{{agent="{safe}"}} {data["tool_calls"]}')
         lines.append(f'oc_session_lines_total{{agent="{safe}"}} {data["lines"]}')
 
-    return "\n".join(lines) + "\n", 200, {"Content-Type": "text/plain; version=0.0.4"}
+    result = "\n".join(lines) + "\n"
+    metrics_endpoint._cache = {"mtime": newest_mtime, "data": result}
+    return result, 200, {"Content-Type": "text/plain; version=0.0.4"}
 
 @app.route("/health")
 def health():
