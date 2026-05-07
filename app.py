@@ -64,6 +64,8 @@ def find_sessions():
     if not os.path.isdir(AGENTS_DIR):
         return sessions
     for root, dirs, files in os.walk(AGENTS_DIR):
+        # Skip cron runs, sub-agent nests, and other non-session dirs
+        dirs[:] = [d for d in dirs if d not in ("cron", "agents")]
         for f in files:
             if not f.endswith(".jsonl"): continue
             if "checkpoint" in f or ".trajectory" in f: continue
