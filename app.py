@@ -338,6 +338,66 @@ def api_agents():
     result.sort(key=lambda x: x["latest_mtime"], reverse=True)
     return jsonify(result)
 
+@app.route("/metrics")
+def metrics_endpoint():
+    """Prometheus-compatible metrics endpoint."""
+    sessions = find_sessions()
+    lines = []
+    # oc_sessions_total — total session count per agent
+    lines.append("# HELP oc_sessions_total Total number of sessions per agent")
+    lines.append("# TYPE oc_sessions_total gauge")
+    # oc_session_size_bytes — total size in bytes per agent
+    lines.append("# HELP oc_session_size_bytes Total session file size per agent in bytes")
+    lines.append("# TYPE oc_session_size_bytes gauge")
+    # oc_session_messages_total — total messages per agent
+    lines.append("# HELP oc_session_messages_total Total messages across all sessions per agent")
+    lines.append("# TYPE oc_session_messages_total gauge")
+    # oc_session_tool_calls_total — total tool calls per agent
+    lines.append("# HELP oc_session_tool_calls_total Total tool calls across all sessions per agent")
+    lines.append("# TYPE oc_session_tool_calls_total gauge")
+    # oc_session_lines_total — total JSONL lines per agent
+    lines.append("# HELP oc_session_lines_total Total JSONL lines across all sessions per agent")
+    lines.append("# TYPE oc_session_lines_total gauge")
+
+    # Aggregate per agent
+    agents = {}
+    for s in sessions:
+        aid = s["agent_name"]
+        if aid not in agents:
+            agents[aid] = {
+                "sessions": 0, "size": 0, "messages": 0, "tool_calls": 0, "lines": 0
+            }
+        a = agents[aid]
+        a["sessions"] += 1
+        a["size"] += s["size"]
+        try:
+            with open(s["path"], "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    a["lines"] += 1
+                    try:
+                        obj = json.loads(line.strip())
+                    except:
+                        continue
+                    msg = obj.get("message") if isinstance(obj.get("message"), dict) else {}
+                    if msg.get("role") == "user":
+                        a["messages"] += 1
+                    elif msg.get("role") == "assistant" and msg.get("tool_calls"):
+                        a["tool_calls"] += len(msg["tool_calls"])
+                        a["messages"] += 1
+        except:
+            pass
+
+    for aid, data in sorted(agents.items()):
+        # Sanitize agent name for Prometheus label
+        safe = "".join(c if c.isalnum() else "_" for c in aid).lower()
+        lines.append(f'oc_sessions_total{{agent="{safe}"}} {data["sessions"]}')
+        lines.append(f'oc_session_size_bytes{{agent="{safe}"}} {data["size"]}')
+        lines.append(f'oc_session_messages_total{{agent="{safe}"}} {data["messages"]}')
+        lines.append(f'oc_session_tool_calls_total{{agent="{safe}"}} {data["tool_calls"]}')
+        lines.append(f'oc_session_lines_total{{agent="{safe}"}} {data["lines"]}')
+
+    return "\n".join(lines) + "\n", 200, {"Content-Type": "text/plain; version=0.0.4"}
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok", "sessions": len(find_sessions())})
