@@ -1,0 +1,6 @@
+agents_dir: "/home/dave/.openclaw/agents"
+port: 8888
+host: "0.0.0.0"
+debug: false
+page_size: 100
+agent_names: {}

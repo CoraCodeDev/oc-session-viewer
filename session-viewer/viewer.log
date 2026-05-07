@@ -1,0 +1,22 @@
+ * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8888
+ * Running on http://192.168.1.156:8888
+Press CTRL+C to quit
+127.0.0.1 - - [07/May/2026 12:25:14] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/May/2026 12:25:15] "GET /api/sessions HTTP/1.1" 200 -
+127.0.0.1 - - [07/May/2026 12:25:52] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [07/May/2026 12:25:53] "GET /api/sessions HTTP/1.1" 200 -
+192.168.1.167 - - [07/May/2026 12:30:57] "GET / HTTP/1.1" 200 -
+192.168.1.167 - - [07/May/2026 12:30:58] "GET /favicon.ico HTTP/1.1" 404 -
+192.168.1.167 - - [07/May/2026 12:31:03] "GET /s/8b367832-2b54-4913-93b3-f286145ad9f6 HTTP/1.1" 200 -
+192.168.1.167 - - [07/May/2026 12:31:34] "GET / HTTP/1.1" 200 -
+192.168.1.167 - - [07/May/2026 12:31:42] "GET /s/3c19ded3-2b7f-4af4-b7c0-ca48b8b84bc8 HTTP/1.1" 200 -
+192.168.1.167 - - [07/May/2026 12:32:05] "GET /s/8b367832-2b54-4913-93b3-f286145ad9f6 HTTP/1.1" 200 -
+192.168.1.167 - - [07/May/2026 12:32:14] "GET /s/8b367832-2b54-4913-93b3-f286145ad9f6?p=1 HTTP/1.1" 200 -
+192.168.1.167 - - [07/May/2026 12:34:29] "GET /s/8b367832-2b54-4913-93b3-f286145ad9f6?p=1 HTTP/1.1" 200 -
+192.168.1.167 - - [07/May/2026 12:35:12] "GET / HTTP/1.1" 200 -
+192.168.1.167 - - [07/May/2026 12:49:08] "GET /s/8b367832-2b54-4913-93b3-f286145ad9f6 HTTP/1.1" 200 -
+192.168.1.167 - - [07/May/2026 12:49:15] "GET /s/8b367832-2b54-4913-93b3-f286145ad9f6?p=1 HTTP/1.1" 200 -

@@ -1,0 +1,54 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: oc-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
+      - '--storage.tsdb.retention.size=512MB'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+          cpus: '0.5'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - telemetry
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: oc-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana-datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=telemetry
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: '0.3'
+    networks:
+      - telemetry
+
+volumes:
+  prom-data:
+  grafana-data:
+
+networks:
+  telemetry:
+    driver: bridge

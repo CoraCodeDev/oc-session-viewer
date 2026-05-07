@@ -1,0 +1,81 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: openclaw
+    metrics_path: /diagnostics/prometheus
+    bearer_token: c7f9428175a6a4e73f0f4ad6da2785cfb807d3b17ceff033
+    scrape_interval: 30s
+    static_configs:
+      - targets: ["host.docker.internal:18789"]
+    metric_relabel_configs:
+      - source_labels: [agent]
+        regex: "coracode"
+        target_label: model
+        replacement: "kilocode/kilo-auto/balanced"
+      - source_labels: [agent]
+        regex: "corabot"
+        target_label: model
+        replacement: "kilocode/kilo-auto/free"
+      - source_labels: [agent]
+        regex: "dailybriefing"
+        target_label: model
+        replacement: "kilocode/kilo-auto/small"
+      - source_labels: [agent]
+        regex: "moltbook"
+        target_label: model
+        replacement: "kilo-auto/free"
+      - source_labels: [agent]
+        regex: "software-engineer"
+        target_label: model
+        replacement: "kilocode/kilo-auto/balanced"
+      - source_labels: [agent]
+        regex: "tester"
+        target_label: model
+        replacement: "kilocode/kilo-auto/balanced"
+      - source_labels: [agent]
+        regex: "ceo"
+        target_label: model
+        replacement: "kilocode/kilo-auto/small"
+      - source_labels: [agent]
+        regex: "business-analyst"
+        target_label: model
+        replacement: "kilocode/kilo-auto/balanced"
+      - source_labels: [agent]
+        regex: "product-manager"
+        target_label: model
+        replacement: "kilo-auto/balanced"
+      - source_labels: [agent]
+        regex: "support-agent"
+        target_label: model
+        replacement: "kilocode/kilo-auto/small"
+      - source_labels: [agent]
+        regex: "meal-planner"
+        target_label: model
+        replacement: "kilocode/kilo-auto/small"
+      - source_labels: [agent]
+        regex: "garden-planner"
+        target_label: model
+        replacement: "kilocode/kilo-auto/small"
+      - source_labels: [agent]
+        regex: "architect"
+        target_label: model
+        replacement: "kilocode/kilo-auto/balanced"
+      - source_labels: [agent]
+        regex: "senior-engineer"
+        target_label: model
+        replacement: "kilocode/kilo-auto/frontier"
+      - source_labels: [agent]
+        regex: "notes-writer"
+        target_label: model
+        replacement: "kilocode/kilo-auto/balanced"
+      - source_labels: [agent]
+        regex: "n8n-bridge"
+        target_label: model
+        replacement: "kilocode/kilo-auto/balanced"
+
+  - job_name: session-viewer
+    scrape_interval: 60s
+    static_configs:
+      - targets: ["host.docker.internal:8888"]
