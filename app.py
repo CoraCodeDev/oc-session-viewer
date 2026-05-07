@@ -281,10 +281,8 @@ def api_session(sid):
     page = request.args.get("p", 0, type=int)
     return jsonify(parse_session(sess["path"], page=page))
 
-@app.route("/api/agents")
-def api_agents():
-    """Aggregate stats per agent for dashboard display."""
-    sessions = find_sessions()
+def _scan_agents(sessions):
+    """Parse session files and aggregate stats per agent."""
     agents = {}
     for s in sessions:
         aid = s["agent_name"]
@@ -336,6 +334,23 @@ def api_agents():
             "latest": time_ago(data["latest_mtime"]),
         })
     result.sort(key=lambda x: x["latest_mtime"], reverse=True)
+    return result
+
+
+@app.route("/api/agents")
+def api_agents():
+    """Aggregate stats per agent for dashboard display.
+
+    Caches output keyed on the newest session file mtime, same strategy
+    as the /metrics endpoint.
+    """
+    sessions = find_sessions()
+    newest_mtime = max((s["mtime"] for s in sessions), default=0)
+    if hasattr(api_agents, "_cache") and api_agents._cache["mtime"] == newest_mtime:
+        return jsonify(api_agents._cache["data"])
+
+    result = _scan_agents(sessions)
+    api_agents._cache = {"mtime": newest_mtime, "data": result}
     return jsonify(result)
 
 @app.route("/metrics")
@@ -350,27 +365,18 @@ def metrics_endpoint():
     newest_mtime = max((s["mtime"] for s in sessions), default=0)
     if hasattr(metrics_endpoint, "_cache") and metrics_endpoint._cache["mtime"] == newest_mtime:
         return metrics_endpoint._cache["data"], 200, {"Content-Type": "text/plain; version=0.0.4"}
+
     lines = []
-    # oc_sessions_total — total session count per agent
     lines.append("# HELP oc_sessions_total Total number of sessions per agent")
     lines.append("# TYPE oc_sessions_total gauge")
-    # oc_session_size_bytes — total size in bytes per agent
     lines.append("# HELP oc_session_size_bytes Total session file size per agent in bytes")
     lines.append("# TYPE oc_session_size_bytes gauge")
-    # oc_session_messages_total — total messages per agent
     lines.append("# HELP oc_session_messages_total Total messages across all sessions per agent")
     lines.append("# TYPE oc_session_messages_total gauge")
-    # oc_session_tool_calls_total — total tool calls per agent
     lines.append("# HELP oc_session_tool_calls_total Total tool calls across all sessions per agent")
     lines.append("# TYPE oc_session_tool_calls_total gauge")
-    # oc_session_lines_total — total JSONL lines per agent
     lines.append("# HELP oc_session_lines_total Total JSONL lines across all sessions per agent")
     lines.append("# TYPE oc_session_lines_total gauge")
-
-    # Cache key: mtime of newest session file
-    newest_mtime = max((s["mtime"] for s in sessions), default=0)
-    if hasattr(metrics_endpoint, "_cache") and metrics_endpoint._cache["mtime"] == newest_mtime:
-        return metrics_endpoint._cache["data"], 200, {"Content-Type": "text/plain; version=0.0.4"}
 
     # Aggregate per agent
     agents = {}
