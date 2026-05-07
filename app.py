@@ -91,7 +91,7 @@ def parse_session(path, page=0):
         for line in f:
             try:
                 obj = json.loads(line.strip())
-            except Exception:
+            except (json.JSONDecodeError, ValueError):
                 continue
             msg = obj.get("message") if isinstance(obj.get("message"), dict) else {}
             if msg.get("model"): model = msg["model"]
@@ -280,6 +280,144 @@ def api_session(sid):
     if not sess: return jsonify({"error": "not found"}), 404
     page = request.args.get("p", 0, type=int)
     return jsonify(parse_session(sess["path"], page=page))
+
+def _scan_agents(sessions):
+    """Parse session files and aggregate stats per agent."""
+    agents = {}
+    for s in sessions:
+        aid = s["agent_name"]
+        if aid not in agents:
+            agents[aid] = {
+                "agent": aid,
+                "sessions": 0,
+                "total_size": 0,
+                "total_lines": 0,
+                "total_messages": 0,
+                "total_tool_calls": 0,
+                "latest_mtime": s["mtime"],
+            }
+        a = agents[aid]
+        a["sessions"] += 1
+        a["total_size"] += s["size"]
+        # Quick parse for message count
+        try:
+            with open(s["path"], "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    a["total_lines"] += 1
+                    try:
+                        obj = json.loads(line.strip())
+                    except (json.JSONDecodeError, ValueError):
+                        continue
+                    msg = obj.get("message") if isinstance(obj.get("message"), dict) else {}
+                    if msg.get("role") == "user":
+                        a["total_messages"] += 1
+                    elif msg.get("role") == "assistant" and msg.get("tool_calls"):
+                        a["total_tool_calls"] += len(msg["tool_calls"])
+                        a["total_messages"] += 1
+        except (IOError, OSError):
+            pass
+        if s["mtime"] > a["latest_mtime"]:
+            a["latest_mtime"] = s["mtime"]
+
+    # Format for JSON output
+    result = []
+    for aid, data in agents.items():
+        result.append({
+            "agent": aid,
+            "sessions": data["sessions"],
+            "total_size": data["total_size"],
+            "total_size_h": human_size(data["total_size"]),
+            "total_lines": data["total_lines"],
+            "total_messages": data["total_messages"],
+            "total_tool_calls": data["total_tool_calls"],
+            "latest_mtime": data["latest_mtime"],
+            "latest": time_ago(data["latest_mtime"]),
+        })
+    result.sort(key=lambda x: x["latest_mtime"], reverse=True)
+    return result
+
+
+@app.route("/api/agents")
+def api_agents():
+    """Aggregate stats per agent for dashboard display.
+
+    Caches output keyed on the newest session file mtime, same strategy
+    as the /metrics endpoint.
+    """
+    sessions = find_sessions()
+    newest_mtime = max((s["mtime"] for s in sessions), default=0)
+    if hasattr(api_agents, "_cache") and api_agents._cache["mtime"] == newest_mtime:
+        return jsonify(api_agents._cache["data"])
+
+    result = _scan_agents(sessions)
+    api_agents._cache = {"mtime": newest_mtime, "data": result}
+    return jsonify(result)
+
+@app.route("/metrics")
+def metrics_endpoint():
+    """Prometheus-compatible metrics endpoint.
+
+    Caches output keyed on the newest session file mtime, so repeated
+    scrapes within the same scrape interval return instantly without
+    re-reading all JSONL files.
+    """
+    sessions = find_sessions()
+    newest_mtime = max((s["mtime"] for s in sessions), default=0)
+    if hasattr(metrics_endpoint, "_cache") and metrics_endpoint._cache["mtime"] == newest_mtime:
+        return metrics_endpoint._cache["data"], 200, {"Content-Type": "text/plain; version=0.0.4"}
+
+    lines = []
+    lines.append("# HELP oc_sessions_total Total number of sessions per agent")
+    lines.append("# TYPE oc_sessions_total gauge")
+    lines.append("# HELP oc_session_size_bytes Total session file size per agent in bytes")
+    lines.append("# TYPE oc_session_size_bytes gauge")
+    lines.append("# HELP oc_session_messages_total Total messages across all sessions per agent")
+    lines.append("# TYPE oc_session_messages_total gauge")
+    lines.append("# HELP oc_session_tool_calls_total Total tool calls across all sessions per agent")
+    lines.append("# TYPE oc_session_tool_calls_total gauge")
+    lines.append("# HELP oc_session_lines_total Total JSONL lines across all sessions per agent")
+    lines.append("# TYPE oc_session_lines_total gauge")
+
+    # Aggregate per agent
+    agents = {}
+    for s in sessions:
+        aid = s["agent_name"]
+        if aid not in agents:
+            agents[aid] = {
+                "sessions": 0, "size": 0, "messages": 0, "tool_calls": 0, "lines": 0
+            }
+        a = agents[aid]
+        a["sessions"] += 1
+        a["size"] += s["size"]
+        try:
+            with open(s["path"], "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    a["lines"] += 1
+                    try:
+                        obj = json.loads(line.strip())
+                    except (json.JSONDecodeError, ValueError):
+                        continue
+                    msg = obj.get("message") if isinstance(obj.get("message"), dict) else {}
+                    if msg.get("role") == "user":
+                        a["messages"] += 1
+                    elif msg.get("role") == "assistant" and msg.get("tool_calls"):
+                        a["tool_calls"] += len(msg["tool_calls"])
+                        a["messages"] += 1
+        except (IOError, OSError):
+            pass
+
+    for aid, data in sorted(agents.items()):
+        # Sanitize agent name for Prometheus label
+        safe = "".join(c if c.isalnum() else "_" for c in aid).lower()
+        lines.append(f'oc_sessions_total{{agent="{safe}"}} {data["sessions"]}')
+        lines.append(f'oc_session_size_bytes{{agent="{safe}"}} {data["size"]}')
+        lines.append(f'oc_session_messages_total{{agent="{safe}"}} {data["messages"]}')
+        lines.append(f'oc_session_tool_calls_total{{agent="{safe}"}} {data["tool_calls"]}')
+        lines.append(f'oc_session_lines_total{{agent="{safe}"}} {data["lines"]}')
+
+    result = "\n".join(lines) + "\n"
+    metrics_endpoint._cache = {"mtime": newest_mtime, "data": result}
+    return result, 200, {"Content-Type": "text/plain; version=0.0.4"}
 
 @app.route("/health")
 def health():
