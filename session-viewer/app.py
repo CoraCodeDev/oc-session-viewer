@@ -60,16 +60,26 @@ def time_ago(ts):
     return f"{d // 86400}d ago"
 
 def find_sessions():
+    """Find session JSONL files. Only scans top-level agent dirs.
+
+    Skips cron/, sub-agent nests, logs/, and other non-session dirs.
+    """
     sessions = []
     if not os.path.isdir(AGENTS_DIR):
         return sessions
-    for root, dirs, files in os.walk(AGENTS_DIR):
-        for f in files:
-            if not f.endswith(".jsonl"): continue
-            if "checkpoint" in f or ".trajectory" in f: continue
-            path = os.path.join(root, f)
-            rel = os.path.relpath(root, AGENTS_DIR)
-            agent = rel.split(os.sep)[0] if rel else "unknown"
+    for agent in os.listdir(AGENTS_DIR):
+        agent_dir = os.path.join(AGENTS_DIR, agent)
+        if not os.path.isdir(agent_dir):
+            continue
+        session_dir = os.path.join(agent_dir, "sessions")
+        if not os.path.isdir(session_dir):
+            continue
+        for f in os.listdir(session_dir):
+            if not f.endswith(".jsonl"):
+                continue
+            if "checkpoint" in f or ".trajectory" in f:
+                continue
+            path = os.path.join(session_dir, f)
             sid = f.replace(".jsonl", "")
             stat = os.stat(path)
             sessions.append({
