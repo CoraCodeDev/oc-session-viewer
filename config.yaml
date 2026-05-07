@@ -1,0 +1,20 @@
+# OC Session Viewer Configuration
+# All values can also be set via environment variables (OC_ prefix)
+
+# Directory containing OpenClaw agent session files
+agents_dir: "~/.openclaw/agents"
+
+# Server settings
+port: 8888
+host: "0.0.0.0"
+debug: false
+
+# Number of messages per page in the session view
+page_size: 100
+
+# Friendly names for agents (optional — inferred from directory name if omitted)
+agent_names: {}
+  # Example:
+  # coracode: "CoraCode"
+  # tester: "Tester"
+  # software-engineer: "Software Engineer"
