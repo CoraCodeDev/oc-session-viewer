@@ -93,9 +93,9 @@ class TestResponseShapes(unittest.TestCase):
         self._patcher.stop()
 
     def _sample_session(self):
-        agent_dir = os.path.join(self.tmpdir, "test-agent")
-        os.makedirs(agent_dir, exist_ok=True)
-        path = os.path.join(agent_dir, "abc123.jsonl")
+        session_dir = os.path.join(self.tmpdir, "test-agent", "sessions")
+        os.makedirs(session_dir, exist_ok=True)
+        path = os.path.join(session_dir, "abc123.jsonl")
         lines = [
             _sample_msg("user", "Hello there"),
             _sample_msg("assistant", "Hi! How can I help?", tool_calls=[
