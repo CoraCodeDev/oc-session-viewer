@@ -281,6 +281,63 @@ def api_session(sid):
     page = request.args.get("p", 0, type=int)
     return jsonify(parse_session(sess["path"], page=page))
 
+@app.route("/api/agents")
+def api_agents():
+    """Aggregate stats per agent for dashboard display."""
+    sessions = find_sessions()
+    agents = {}
+    for s in sessions:
+        aid = s["agent_name"]
+        if aid not in agents:
+            agents[aid] = {
+                "agent": aid,
+                "sessions": 0,
+                "total_size": 0,
+                "total_lines": 0,
+                "total_messages": 0,
+                "total_tool_calls": 0,
+                "latest_mtime": s["mtime"],
+            }
+        a = agents[aid]
+        a["sessions"] += 1
+        a["total_size"] += s["size"]
+        # Quick parse for message count
+        try:
+            with open(s["path"], "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    a["total_lines"] += 1
+                    try:
+                        obj = json.loads(line.strip())
+                    except:
+                        continue
+                    msg = obj.get("message") if isinstance(obj.get("message"), dict) else {}
+                    if msg.get("role") == "user":
+                        a["total_messages"] += 1
+                    elif msg.get("role") == "assistant" and msg.get("tool_calls"):
+                        a["total_tool_calls"] += len(msg["tool_calls"])
+                        a["total_messages"] += 1
+        except:
+            pass
+        if s["mtime"] > a["latest_mtime"]:
+            a["latest_mtime"] = s["mtime"]
+
+    # Format for JSON output
+    result = []
+    for aid, data in agents.items():
+        result.append({
+            "agent": aid,
+            "sessions": data["sessions"],
+            "total_size": data["total_size"],
+            "total_size_h": human_size(data["total_size"]),
+            "total_lines": data["total_lines"],
+            "total_messages": data["total_messages"],
+            "total_tool_calls": data["total_tool_calls"],
+            "latest_mtime": data["latest_mtime"],
+            "latest": time_ago(data["latest_mtime"]),
+        })
+    result.sort(key=lambda x: x["latest_mtime"], reverse=True)
+    return jsonify(result)
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok", "sessions": len(find_sessions())})
