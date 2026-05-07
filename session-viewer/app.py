@@ -283,8 +283,15 @@ def api_session(sid):
 
 @app.route("/api/agents")
 def api_agents():
-    """Aggregate stats per agent for dashboard display."""
+    """Aggregate stats per agent for dashboard display.
+
+    Caches output keyed on the newest session file mtime to avoid
+    re-scanning and re-parsing all JSONL files on every request.
+    """
     sessions = find_sessions()
+    newest_mtime = max((s["mtime"] for s in sessions), default=0)
+    if hasattr(api_agents, "_cache") and api_agents._cache["mtime"] == newest_mtime:
+        return jsonify(api_agents._cache["data"])
     agents = {}
     for s in sessions:
         aid = s["agent_name"]
@@ -336,6 +343,7 @@ def api_agents():
             "latest": time_ago(data["latest_mtime"]),
         })
     result.sort(key=lambda x: x["latest_mtime"], reverse=True)
+    api_agents._cache = {"mtime": newest_mtime, "data": result}
     return jsonify(result)
 
 @app.route("/metrics")
@@ -366,11 +374,6 @@ def metrics_endpoint():
     # oc_session_lines_total — total JSONL lines per agent
     lines.append("# HELP oc_session_lines_total Total JSONL lines across all sessions per agent")
     lines.append("# TYPE oc_session_lines_total gauge")
-
-    # Cache key: mtime of newest session file
-    newest_mtime = max((s["mtime"] for s in sessions), default=0)
-    if hasattr(metrics_endpoint, "_cache") and metrics_endpoint._cache["mtime"] == newest_mtime:
-        return metrics_endpoint._cache["data"], 200, {"Content-Type": "text/plain; version=0.0.4"}
 
     # Aggregate per agent
     agents = {}
