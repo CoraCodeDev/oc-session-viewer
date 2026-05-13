@@ -39,15 +39,17 @@
         </div>
         {% if m.role == 'tool_call' %}
             {% set is_long = m.args | length > 200 %}
-            <div class="msg__body msg__body--tool"{% if is_long %} data-full="{{ m.args | e }}"{% endif %}>{{ (m.args[:200] + '…' if is_long else m.args) | e }}</div>
+            {% set trunc_len = 200 %}
+            <div class="msg__body msg__body--tool"{% if is_long %} data-full="{{ m.args | e }}"{% endif %}>{{ (m.args[:trunc_len] + '…' if is_long else m.args) | e }}</div>
             {% if is_long %}
-                <button class="msg__expand" onclick="toggleExpand(this)">Show full args</button>
+                <button class="msg__expand" onclick="toggleExpand(this, {{ trunc_len }})" data-trunc-len="{{ trunc_len }}">Show full args</button>
             {% endif %}
         {% elif m.role == 'tool_result' %}
             {% set is_long = m.content | length > 300 %}
-            <div class="msg__body msg__body--tool"{% if is_long %} data-full="{{ m.content | e }}"{% endif %}>{{ (m.content[:300] + '…' if is_long else m.content) | e }}</div>
+            {% set trunc_len = 300 %}
+            <div class="msg__body msg__body--tool"{% if is_long %} data-full="{{ m.content | e }}"{% endif %}>{{ (m.content[:trunc_len] + '…' if is_long else m.content) | e }}</div>
             {% if is_long %}
-                <button class="msg__expand" onclick="toggleExpand(this)">Show full</button>
+                <button class="msg__expand" onclick="toggleExpand(this, {{ trunc_len }})" data-trunc-len="{{ trunc_len }}">Show full</button>
             {% endif %}
         {% else %}
             <div class="msg__body" data-raw="{{ m.content | e }}">{{ m.content | e }}</div>
@@ -88,12 +90,13 @@ function copyMsg(btn) {
     });
 }
 
-function toggleExpand(btn) {
+function toggleExpand(btn, truncLen) {
     const body = btn.previousElementSibling;
     const full = body.getAttribute('data-full');
+    const len = truncLen || parseInt(btn.dataset.truncLen) || 300;
     if (btn.dataset.expanded === 'true') {
-        body.textContent = full.substring(0, parseInt(btn.dataset.truncLen || 300)) + '…';
-        btn.textContent = btn.dataset.label || 'Show full';
+        body.textContent = full.substring(0, len) + '…';
+        btn.textContent = btn.textContent.includes('args') ? 'Show full args' : 'Show full';
         btn.dataset.expanded = 'false';
     } else {
         body.textContent = full;

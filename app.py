@@ -5,6 +5,7 @@ Reads JSONL files server-side, renders conversation with pagination.
 """
 
 import json
+import logging
 import os
 import time
 from pathlib import Path
@@ -386,7 +387,9 @@ def health() -> Any:
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    print(f"Starting OpenClaw Session Viewer on {CONFIG['host']}:{CONFIG['port']}")
-    print(f"Agents dir: {CONFIG['agents_dir']}")
-    print(f"Page size: {CONFIG['page_size']}")
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logger = logging.getLogger(__name__)
+    logger.info("Starting OpenClaw Session Viewer on %s:%s", CONFIG["host"], CONFIG["port"])
+    logger.info("Agents dir: %s", CONFIG["agents_dir"])
+    logger.info("Page size: %s", CONFIG["page_size"])
     app.run(host=CONFIG["host"], port=CONFIG["port"], debug=CONFIG["debug"])
