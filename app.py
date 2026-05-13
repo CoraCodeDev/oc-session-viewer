@@ -172,7 +172,7 @@ def _compute_agent_stats() -> list[dict[str, Any]]:
             "latest": time_ago(data["latest_mtime"]),
         })
     result.sort(key=lambda x: x["latest_mtime"], reverse=True)
-    result.insert(0, {"_cache_mtime": newest_mtime})
+    _compute_agent_stats._cache_mtime = newest_mtime  # type: ignore[attr-defined]
     return result
 
 
@@ -334,7 +334,7 @@ def api_session(sid: str) -> tuple[Any, int]:
 def api_agents() -> Any:
     """Aggregate stats per agent, cached on newest session mtime."""
     stats = _compute_agent_stats()
-    cache_mtime = stats[0].pop("_cache_mtime", 0)
+    cache_mtime = getattr(_compute_agent_stats, "_cache_mtime", 0)  # type: ignore[attr-defined]
 
     if hasattr(api_agents, "_cache") and api_agents._cache["mtime"] == cache_mtime:  # type: ignore[attr-defined]
         return jsonify(api_agents._cache["data"])  # type: ignore[attr-defined]
@@ -347,7 +347,7 @@ def api_agents() -> Any:
 def metrics_endpoint() -> tuple[str, int, dict[str, str]]:
     """Prometheus-compatible metrics endpoint, cached on newest session mtime."""
     stats = _compute_agent_stats()
-    cache_mtime = stats[0].pop("_cache_mtime", 0)
+    cache_mtime = getattr(_compute_agent_stats, "_cache_mtime", 0)  # type: ignore[attr-defined]
 
     if hasattr(metrics_endpoint, "_cache") and metrics_endpoint._cache["mtime"] == cache_mtime:  # type: ignore[attr-defined]
         return (metrics_endpoint._cache["data"], 200, {"Content-Type": "text/plain; version=0.0.4"})  # type: ignore[attr-defined]
