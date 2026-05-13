@@ -9,14 +9,25 @@
 </head>
 <body>
     <div class="header-bar">
-        <span class="header-bar__title">💻 OpenClaw Session Viewer</span>
-        <div class="header-bar__actions">
-            {% block header_actions %}{% endblock %}
+        <div class="container">
+            <a href="https://coracode.co.uk" target="_blank" rel="noopener" class="header-bar__brand">
+                <span class="header-bar__icon">💻</span>
+                <span class="header-bar__name">OpenClaw Session Viewer</span>
+            </a>
+            <span class="header-bar__byline">by <strong>CoraCode</strong></span>
+            <div class="header-bar__actions">
+                {% block header_actions %}{% endblock %}
+            </div>
         </div>
     </div>
     <div class="container{% block container_class %}{% endblock %}">
         {% block content %}{% endblock %}
     </div>
+    <footer class="footer">
+        <span>Made by <a href="https://coracode.co.uk" target="_blank" rel="noopener">CoraCode</a></span>
+        <span class="footer__sep">·</span>
+        <a href="https://github.com/CoraCodeDev/oc-session-viewer" target="_blank" rel="noopener">GitHub</a>
+    </footer>
     {% block scripts %}{% endblock %}
 </body>
 </html>
