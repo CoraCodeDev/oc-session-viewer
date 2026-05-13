@@ -1,0 +1,389 @@
+/* ── Reset & Base ──────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  line-height: 1.5;
+}
+
+a { color: #58a6ff; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+.container--narrow { max-width: 900px; }
+
+/* ── Header Bar ────────────────────────────────────────────────── */
+.header-bar {
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -24px -24px 24px -24px;
+}
+
+.header-bar__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #58a6ff;
+}
+
+.header-bar__actions { display: flex; align-items: center; gap: 8px; }
+
+/* ── Buttons ───────────────────────────────────────────────────── */
+.btn {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #e6edf3;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+
+.btn:hover { border-color: #58a6ff; }
+.btn:disabled { opacity: 0.3; cursor: default; border-color: #30363d; }
+
+.btn--small {
+  padding: 2px 8px;
+  font-size: 11px;
+}
+
+.btn--copy {
+  background: transparent;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.msg:hover .btn--copy { opacity: 1; }
+.btn--copy:hover { background: #30363d; color: #e6edf3; }
+.btn--copy.copied { color: #3fb950; }
+
+/* ── Subtitle / Stats Bar ──────────────────────────────────────── */
+.subtitle {
+  color: #8b949e;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* ── Toolbar ───────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar input,
+.toolbar select {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #e6edf3;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.toolbar input { flex: 1; min-width: 240px; }
+.toolbar input:focus,
+.toolbar select:focus { outline: none; border-color: #58a6ff; }
+
+/* ── Table ─────────────────────────────────────────────────────── */
+.table-wrapper { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+
+th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid #30363d;
+  color: #8b949e;
+  font-size: 11px;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+}
+
+th:hover { color: #58a6ff; }
+
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #21262d;
+  font-size: 14px;
+}
+
+tr:hover td { background: #161b22; }
+
+.meta { color: #8b949e; font-size: 13px; }
+
+/* ── Badges ────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(88, 166, 255, 0.12);
+  color: #58a6ff;
+  border: 1px solid rgba(88, 166, 255, 0.2);
+}
+
+/* ── Session Header Card ──────────────────────────────────────── */
+.session-header {
+  background: #161b22;
+  border: 1px solid #30363d;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.session-header__title {
+  font-size: 1rem;
+  margin-bottom: 4px;
+  color: #58a6ff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.session-header__meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #8b949e;
+}
+
+/* ── Stats Row ─────────────────────────────────────────────────── */
+.stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  background: #161b22;
+  border: 1px solid #30363d;
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+.stat__value { font-size: 1.1rem; font-weight: 600; color: #58a6ff; }
+.stat__label { font-size: 10px; color: #8b949e; text-transform: uppercase; }
+
+/* ── Messages ──────────────────────────────────────────────────── */
+.back-link {
+  font-size: 14px;
+  margin-bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.msg {
+  margin-bottom: 12px;
+  border-bottom: 1px solid #21262d;
+  padding-bottom: 12px;
+}
+
+.msg:last-child { border-bottom: none; }
+
+.msg__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.role {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.role--user { background: #238636; color: #fff; }
+.role--assistant { background: #1f6feb; color: #fff; }
+.role--tool_call { background: #6e40c9; color: #fff; }
+.role--tool_result { background: #484f58; color: #fff; }
+
+.msg__tool-name {
+  color: #bc8cff;
+  font-size: 12px;
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.msg__ts {
+  font-size: 11px;
+  color: #8b949e;
+  margin-left: auto;
+}
+
+.msg__body {
+  background: #161b22;
+  padding: 10px 14px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.55;
+  position: relative;
+}
+
+.msg__body--tool {
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  font-size: 12px;
+  color: #8b949e;
+}
+
+/* Expandable content */
+.msg__preview { position: relative; }
+
+.msg__preview .msg__body {
+  max-height: 160px;
+  overflow: hidden;
+  transition: max-height 0.2s;
+}
+
+.msg__preview.is-expanded .msg__body { max-height: none; }
+
+.msg__expand {
+  background: transparent;
+  border: none;
+  color: #58a6ff;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+.msg__expand:hover { text-decoration: underline; }
+
+/* ── Pagination ────────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  gap: 6px;
+  margin: 16px 0;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pagination__info {
+  color: #8b949e;
+  font-size: 13px;
+  margin: 0 8px;
+}
+
+.pagination__page {
+  min-width: 32px;
+  text-align: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.pagination__page--active {
+  background: #1f6feb;
+  color: #fff;
+  border-color: #1f6feb;
+}
+
+.pagination__page--ellipsis {
+  border: none;
+  background: none;
+  color: #8b949e;
+  cursor: default;
+}
+
+.pagination__page--ellipsis:hover {
+  border-color: #30363d;
+  background: none;
+  color: #8b949e;
+}
+
+/* ── Sessions Page ───────────────────────────────────────────── */
+.sessions-page__title {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+  color: #58a6ff;
+}
+
+/* ── Badge Variants ──────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(88, 166, 255, 0.12);
+  color: #58a6ff;
+  border: 1px solid rgba(88, 166, 255, 0.2);
+  white-space: nowrap;
+}
+
+.badge--agent {
+  background: rgba(139, 148, 158, 0.15);
+  color: #c9d1d9;
+  border-color: rgba(139, 148, 158, 0.25);
+}
+
+/* ── Session Table ───────────────────────────────────────────── */
+.sessions-table th:first-child { width: 180px; }
+.sessions-table td:first-child { white-space: nowrap; }
+
+/* ── Pagination Page Numbers ─────────────────────────────────── */
+.pagination__page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  text-align: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+.pagination__page--active {
+  background: #1f6feb;
+  color: #fff;
+  border-color: #1f6feb;
+  pointer-events: none;
+}
+
+.pagination__page--ellipsis {
+  border: none;
+  background: none;
+  color: #8b949e;
+  cursor: default;
+  padding: 6px 4px;
+}
+
+.pagination__page--ellipsis:hover {
+  border-color: #30363d;
+  background: none;
+  color: #8b949e;
+}
+
+/* ── Utility ───────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

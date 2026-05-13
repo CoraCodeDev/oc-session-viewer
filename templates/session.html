@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}{{ session.agent_name }} — {{ session.id[:12] }}… — OpenClaw Session Viewer{% endblock %}
+{% block container_class %} container--narrow{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn--refresh" onclick="location.reload()">↻ Refresh</button>
+{% endblock %}
+
+{% block content %}
+<div class="session-page">
+    <a class="back-link" href="/">← Sessions</a>
+
+    <div class="session-header">
+        <div class="session-header__title">{{ session.agent_name }} — {{ session.id[:12] }}…</div>
+        <div class="session-header__meta">
+            <span>Model: <strong>{{ data.model }}</strong></span>
+            <span>File: <strong>{{ session.size_h }}</strong></span>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat"><div class="stat__value">{{ data.total }}</div><div class="stat__label">Messages</div></div>
+        <div class="stat"><div class="stat__value">{{ data.tool_calls }}</div><div class="stat__label">Tool Calls</div></div>
+        <div class="stat"><div class="stat__value">{{ data.user_msgs }}</div><div class="stat__label">User Msgs</div></div>
+        <div class="stat"><div class="stat__value">{{ data.total_pages }}</div><div class="stat__label">Pages</div></div>
+    </div>
+
+    {% for m in data.messages %}
+    <div class="msg">
+        <div class="msg__header">
+            <span class="role role--{{ m.role }}">{{ m.role | replace('_', ' ') }}</span>
+            {% if m.role in ('tool_call', 'tool_result') %}
+                <span class="msg__tool-name">{{ m.tool }}</span>
+            {% endif %}
+            <span class="msg__ts">{{ m.ts }}</span>
+            {% if m.role in ('user', 'assistant', 'tool_result') %}
+                <button class="btn btn--copy" onclick="copyMsg(this)" title="Copy to clipboard">📋</button>
+            {% endif %}
+        </div>
+        {% if m.role == 'tool_call' %}
+            {% set is_long = m.args | length > 200 %}
+            <div class="msg__body msg__body--tool"{% if is_long %} data-full="{{ m.args | e }}"{% endif %}>{{ (m.args[:200] + '…' if is_long else m.args) | e }}</div>
+            {% if is_long %}
+                <button class="msg__expand" onclick="toggleExpand(this)">Show full args</button>
+            {% endif %}
+        {% elif m.role == 'tool_result' %}
+            {% set is_long = m.content | length > 300 %}
+            <div class="msg__body msg__body--tool"{% if is_long %} data-full="{{ m.content | e }}"{% endif %}>{{ (m.content[:300] + '…' if is_long else m.content) | e }}</div>
+            {% if is_long %}
+                <button class="msg__expand" onclick="toggleExpand(this)">Show full</button>
+            {% endif %}
+        {% else %}
+            <div class="msg__body" data-raw="{{ m.content | e }}">{{ m.content | e }}</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% if data.total_pages > 1 %}
+    <div class="pagination">
+        {% if data.has_prev %}<a href="?p={{ data.page - 1 }}" class="btn pagination__page">← Prev</a>{% else %}<button class="btn pagination__page" disabled>← Prev</button>{% endif %}
+        {% for pg in data.page_numbers %}
+            {% if pg == '...' %}
+                <span class="pagination__page pagination__page--ellipsis">…</span>
+            {% else %}
+                {% if pg == data.page + 1 %}
+                    <span class="btn pagination__page pagination__page--active">{{ pg }}</span>
+                {% else %}
+                    <a href="?p={{ pg - 1 }}" class="btn pagination__page">{{ pg }}</a>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        <span class="pagination__info">Page {{ data.page + 1 }} of {{ data.total_pages }} ({{ data.total }} msgs)</span>
+        {% if data.has_next %}<a href="?p={{ data.page + 1 }}" class="btn pagination__page">Next →</a>{% else %}<button class="btn pagination__page" disabled>Next →</button>{% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyMsg(btn) {
+    const body = btn.closest('.msg').querySelector('.msg__body');
+    const text = body.getAttribute('data-raw') || body.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.classList.add('copied');
+        btn.textContent = '✓ Copied';
+        setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋'; }, 1500);
+    });
+}
+
+function toggleExpand(btn) {
+    const body = btn.previousElementSibling;
+    const full = body.getAttribute('data-full');
+    if (btn.dataset.expanded === 'true') {
+        body.textContent = full.substring(0, parseInt(btn.dataset.truncLen || 300)) + '…';
+        btn.textContent = btn.dataset.label || 'Show full';
+        btn.dataset.expanded = 'false';
+    } else {
+        body.textContent = full;
+        btn.textContent = 'Show less';
+        btn.dataset.expanded = 'true';
+    }
+}
+</script>
+{% endblock %}
