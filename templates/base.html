@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>{% block title %}OpenClaw Session Viewer{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <div class="header-bar">
+        <span class="header-bar__title">💻 OpenClaw Session Viewer</span>
+        <div class="header-bar__actions">
+            {% block header_actions %}{% endblock %}
+        </div>
+    </div>
+    <div class="container{% block container_class %}{% endblock %}">
+        {% block content %}{% endblock %}
+    </div>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

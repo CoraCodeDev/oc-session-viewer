@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Sessions — OpenClaw Session Viewer{% endblock %}
+
+{% block header_actions %}
+<button class="btn btn--refresh" onclick="location.reload()">↻ Refresh</button>
+{% endblock %}
+
+{% block content %}
+<div class="sessions-page">
+    <h1 class="sessions-page__title">Sessions</h1>
+    <div class="subtitle">{{ sessions|length }} sessions · {{ agents|length }} agents</div>
+
+    <div class="toolbar">
+        <input type="text" id="q" placeholder="Search ID or agent…" oninput="filterTable()" class="input input--search">
+        <select id="a" onchange="filterTable()" class="input input--select">
+            <option value="">All Agents</option>
+            {% for ag in agents %}<option value="{{ ag }}">{{ ag }}</option>{% endfor %}
+        </select>
+    </div>
+
+    <div class="table-wrapper">
+    <table class="sessions-table">
+        <thead>
+            <tr>
+                <th>Agent</th>
+                <th>Session</th>
+                <th>Size</th>
+                <th>Updated</th>
+            </tr>
+        </thead>
+        <tbody id="r">
+            {% for s in sessions %}
+            <tr data-a="{{ s.agent }}" data-i="{{ s.id }}">
+                <td><span class="badge">{{ s.agent_name }}</span></td>
+                <td><a href="/s/{{ s.id }}">{{ s.id[:8] }}…{{ s.id[-6:] }}</a></td>
+                <td class="meta">{{ s.size_h }}</td>
+                <td class="meta">{{ s.mtime_h }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterTable() {
+    const q = document.getElementById('q').value.toLowerCase();
+    const a = document.getElementById('a').value;
+    document.querySelectorAll('#r tr').forEach(r => {
+        r.style.display = (!a || r.dataset.a === a) && (!q || r.dataset.i.includes(q) || r.dataset.a.includes(q)) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

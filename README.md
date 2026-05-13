@@ -1,15 +1,17 @@
-# OC Session Viewer
+# OpenClaw Session Viewer
 
-A lightweight, server-side session viewer for [OpenClaw](https://github.com/openclaw/openclaw). Reads session JSONL files and renders them with pagination — fast even for 36MB+ files because it only loads 100 messages at a time, never the full file.
+A lightweight, server-side session viewer for [OpenClaw](https://github.com/openclaw/openclaw). Reads session JSONL files and renders them in a clean, paginated UI — fast even for 36MB+ files because it only loads 100 messages at a time, never the full file.
 
 ## Features
 
 - **Server-side parsing** — reads JSONL files on demand, no browser memory hog
-- **Pagination** — configurable page size (default 100 messages per page)
-- **Refresh button** — reload sessions without restarting the app
+- **Pagination with page numbers** — configurable page size, jump to any page
+- **Copy to clipboard** — click the 📋 button on any message
+- **Expandable tool calls** — long tool args/results are truncated with a "Show full" toggle
 - **Search & filter** — search by session ID or agent, filter by agent
-- **Full conversation view** — user messages, assistant responses, tool calls, tool results
-- **JSON API** — programmatic access to sessions for scripting
+- **Stats dashboard** — per-agent message counts, tool calls, and file sizes
+- **Prometheus metrics** — built-in `/metrics` endpoint for Grafana dashboards
+- **JSON API** — full programmatic access to sessions and agent stats
 - **Zero dependencies on OpenClaw internals** — just reads the JSONL files
 
 ## Quick Start
@@ -156,11 +158,18 @@ server {
 
 ```
 oc-session-viewer/
-├── app.py              # Main application
+├── app.py              # Main Flask application
 ├── config.yaml         # Configuration file
 ├── requirements.txt    # Python dependencies
 ├── .env.example        # Environment variable template
 ├── Dockerfile          # Docker build file
+├── templates/          # Jinja2 HTML templates
+│   ├── base.html       # Base layout with header bar
+│   ├── index.html      # Session list page
+│   └── session.html    # Session detail page
+├── static/
+│   └── css/
+│       └── style.css   # All styles
 └── README.md           # This file
 ```
 
