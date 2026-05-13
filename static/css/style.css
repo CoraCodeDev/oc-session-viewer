@@ -6,32 +6,62 @@ body {
   background: #0d1117;
   color: #e6edf3;
   line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 a { color: #58a6ff; text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; width: 100%; }
 .container--narrow { max-width: 900px; }
 
 /* ── Header Bar ────────────────────────────────────────────────── */
 .header-bar {
   background: #161b22;
   border-bottom: 1px solid #30363d;
-  padding: 12px 24px;
+  padding: 12px 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin: -24px -24px 24px -24px;
 }
 
-.header-bar__title {
+.header-bar .container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-bar__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #58a6ff;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #58a6ff;
+  text-decoration: none;
 }
 
-.header-bar__actions { display: flex; align-items: center; gap: 8px; }
+.header-bar__brand:hover { text-decoration: none; }
+
+.header-bar__icon { font-size: 1.3rem; }
+
+.header-bar__byline {
+  font-size: 0.85rem;
+  color: #8b949e;
+}
+
+.header-bar__byline strong {
+  color: #e6edf3;
+  font-weight: 600;
+}
+
+.header-bar__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 /* ── Buttons ───────────────────────────────────────────────────── */
 .btn {
@@ -337,6 +367,20 @@ tr:hover td { background: #161b22; }
 /* ── Session Table ───────────────────────────────────────────── */
 .sessions-table th:first-child { width: 180px; }
 .sessions-table td:first-child { white-space: nowrap; }
+
+/* ── Footer ────────────────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  padding: 16px 24px;
+  color: #8b949e;
+  font-size: 13px;
+  border-top: 1px solid #21262d;
+  margin-top: auto;
+}
+
+.footer a { color: #58a6ff; }
+.footer a:hover { text-decoration: underline; }
+.footer__sep { margin: 0 4px; }
 
 /* ── Utility ───────────────────────────────────────────────────── */
 .sr-only {
